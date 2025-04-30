@@ -5,7 +5,7 @@ repositories {
 }
 
 group   = "one.wabbit"
-version = "0.0.1"
+version = "0.0.2"
 
 plugins {
     scala
@@ -18,7 +18,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "one.wabbit"
             artifactId = "scala-twokenize"
-            version = "0.0.1"
+            version = "0.0.2"
             from(components["java"])
         }
     }
