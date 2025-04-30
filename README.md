@@ -1,2 +1,0 @@
-# sio
-Scala IO monad
