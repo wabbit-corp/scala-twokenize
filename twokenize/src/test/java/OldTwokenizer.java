@@ -270,7 +270,7 @@ public class OldTwokenizer {
         // Uncomment to get "you 're"
         /*ArrayList<String> splitStr = new ArrayList<String>(zippedStr.size());
         for(String tok:zippedStr)
-        	splitStr.addAll(splitToken(tok));
+            splitStr.addAll(splitToken(tok));
         zippedStr=splitStr;*/
 
         return zippedStr;
