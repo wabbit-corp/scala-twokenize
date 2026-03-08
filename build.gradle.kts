@@ -1,7 +1,5 @@
 repositories {
     mavenCentral()
-
-    maven("https://jitpack.io")
 }
 
 group   = "one.wabbit"
