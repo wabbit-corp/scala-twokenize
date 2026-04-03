@@ -11,16 +11,47 @@ plugins {
     scala
 
     id("maven-publish")
+
+    id("com.vanniktech.maven.publish")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "one.wabbit"
-            artifactId = "scala-twokenize"
-            version = "0.0.2"
-            from(components["java"])
+mavenPublishing {
+    coordinates("one.wabbit", "scala-twokenize", "0.0.2")
+    publishToMavenCentral()
+    signAllPublications()
+    pom {
+        name.set("scala-twokenize")
+        description.set("scala-twokenize")
+        url.set("https://github.com/wabbit-corp/scala-twokenize")
+        licenses {
+            license {
+                name.set("GNU Affero General Public License v3.0 or later")
+                url.set("https://spdx.org/licenses/AGPL-3.0-or-later.html")
+            }
         }
+        developers {
+            developer {
+                id.set("wabbit-corp")
+                name.set("Wabbit Consulting Corporation")
+
+                email.set("wabbit@wabbit.one")
+
+            }
+        }
+        scm {
+            url.set("https://github.com/wabbit-corp/scala-twokenize")
+            connection.set("scm:git:git://github.com/wabbit-corp/scala-twokenize.git")
+            developerConnection.set("scm:git:ssh://git@github.com/wabbit-corp/scala-twokenize.git")
+        }
+    }
+}
+
+val localPublishRequested =
+    gradle.startParameter.taskNames.any { taskName -> "MavenLocal" in taskName }
+
+if (localPublishRequested) {
+    tasks.withType<org.gradle.plugins.signing.Sign>().configureEach {
+        enabled = false
     }
 }
 
@@ -36,6 +67,46 @@ dependencies {
 java {
     targetCompatibility = JavaVersion.toVersion(21)
     sourceCompatibility = JavaVersion.toVersion(21)
+}
+
+val configuredVersionString = version.toString()
+
+tasks.register("printVersion") {
+    inputs.property("configuredVersion", configuredVersionString)
+    doLast {
+        println(inputs.properties["configuredVersion"])
+    }
+}
+
+tasks.register("assertReleaseVersion") {
+    inputs.property("configuredVersion", configuredVersionString)
+    doLast {
+        val versionString = inputs.properties["configuredVersion"].toString()
+        require(!versionString.endsWith("+dev-SNAPSHOT")) {
+            "Release publishing requires a non-snapshot version, got $versionString"
+        }
+        val refType = System.getenv("GITHUB_REF_TYPE") ?: ""
+        val refName = System.getenv("GITHUB_REF_NAME") ?: ""
+        if (refType == "tag" && refName.isNotBlank()) {
+            val expectedTag = "v$versionString"
+            require(refName == expectedTag) {
+                "Git tag $refName does not match project version $versionString"
+            }
+        }
+    }
+}
+
+tasks.register("assertSnapshotVersion") {
+    inputs.property("configuredVersion", configuredVersionString)
+    doLast {
+        val versionString = inputs.properties["configuredVersion"].toString()
+        require(versionString.endsWith("+dev-SNAPSHOT")) {
+            "Snapshot publishing requires a +dev-SNAPSHOT version, got $versionString"
+        }
+        require((System.getenv("GITHUB_REF_TYPE") ?: "") != "tag") {
+            "Snapshot publishing must not run from a tag ref"
+        }
+    }
 }
 
 tasks {
